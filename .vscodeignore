@@ -1,0 +1,12 @@
+**
+!dist/**
+!vendor/viz/viz.cjs
+!vendor/viz/provenance.json
+!vendor/viz/SHA256SUMS
+!vendor/viz/licenses/**
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!THIRD_PARTY_NOTICES.md
+!media/icon.png
