@@ -108,3 +108,6 @@ yarn.lock
 
 # Build output
 dist/
+
+# VS Code downloaded by @vscode/test-electron
+.vscode-test/

@@ -50,12 +50,15 @@
     "test": "node --import tsx --test test/*.test.ts",
     "build": "node scripts/build.mjs",
     "vscode:prepublish": "npm run build",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "test:extension": "node scripts/test-extension.mjs",
+    "test:package": "node scripts/test-package.mjs"
   },
   "devDependencies": {
     "@types/markdown-it": "14.2.0",
     "@types/node": "22.20.3",
     "@types/vscode": "1.95.0",
+    "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "4.0.0",
     "@xmldom/xmldom": "0.9.12",
     "esbuild": "0.28.2",

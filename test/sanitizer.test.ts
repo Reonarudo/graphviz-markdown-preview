@@ -99,3 +99,8 @@ test('two copies of one diagram get distinct ids that each reference only themse
     for (const ref of refs(copy)) assert.ok(ids(copy).includes(ref), ref);
   }
 });
+
+test('labels keep runs of spaces, which Graphviz writes as non-breaking spaces', () => {
+  const svg = sanitizeSvg(dot('digraph { a [label="a    b"] }'));
+  assert.match(svg, />a \u00a0\u00a0\u00a0b<\/text>/);
+});
