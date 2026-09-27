@@ -43,6 +43,7 @@
   },
   "scripts": {
     "lint": "tsc --noEmit",
+    "pretest": "npm run build",
     "test": "node --import tsx --test test/*.test.ts",
     "build": "node scripts/build.mjs",
     "vscode:prepublish": "npm run build",

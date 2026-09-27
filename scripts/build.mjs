@@ -3,7 +3,7 @@ import { mkdir } from 'node:fs/promises';
 
 await mkdir('dist', { recursive: true });
 await build({
-  entryPoints: ['src/extension.ts'],
+  entryPoints: ['src/extension.ts', 'src/worker.ts'],
   outdir: 'dist',
   bundle: true,
   platform: 'node',
