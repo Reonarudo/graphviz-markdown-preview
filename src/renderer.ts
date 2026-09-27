@@ -102,11 +102,14 @@ export async function createRuntime(directory: string, options: RuntimeOptions =
  * a lookup rather than a layout.
  *
  * Outcomes are cached, timeouts included: a graph too dense to lay out is not retried until its
- * source changes. `clean` runs once per fresh diagram and its output is what gets cached.
+ * source changes. `clean` runs once per fresh diagram and its output is what gets cached; if it
+ * throws, the refusal is cached as a failure. `onFresh` hears every real render — never a cache
+ * hit — so warnings can be logged once rather than on every keystroke.
  */
 export function createRenderer(
   runtime: Pick<Runtime, 'render'>,
-  clean: (svg: string) => string = (svg) => svg
+  clean: (svg: string) => string = (svg) => svg,
+  onFresh: (source: string, result: RenderResult) => void = () => {}
 ): (source: string) => RenderResult {
   const cache = new Map<string, RenderResult>();
   return (source) => {
@@ -117,7 +120,15 @@ export function createRenderer(
       cache.delete(key);
     } else {
       result = runtime.render(source);
-      if (result.status === 'success') result = { ...result, output: clean(result.output) };
+      if (result.status === 'success') {
+        try {
+          result = { ...result, output: clean(result.output) };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Graphviz output was refused.';
+          result = { status: 'failure', errors: [{ level: 'error', message }] };
+        }
+      }
+      onFresh(source, result);
       // An unavailable renderer says nothing about this source; the next render retries.
       if (result.status === 'unavailable') return result;
     }

@@ -50,3 +50,21 @@ test('the cache keeps the 96 most recently used sources', () => {
   render('g1');
   assert.deepEqual(runtime.seen, ['g1']);
 });
+
+test('a diagram the cleaner refuses becomes a cached failure carrying its message', () => {
+  const runtime = stubRuntime();
+  const render = createRenderer(runtime, () => { throw new Error('could not be parsed safely'); });
+  const expected = { status: 'failure', errors: [{ level: 'error', message: 'could not be parsed safely' }] };
+  assert.deepEqual(render('a'), expected);
+  assert.deepEqual(render('a'), expected);
+  assert.deepEqual(runtime.seen, ['a']);
+});
+
+test('onFresh hears each real render once, with its source, and never a cache hit', () => {
+  const heard: [string, string][] = [];
+  const render = createRenderer(stubRuntime(), undefined, (source, result) => heard.push([source, result.status]));
+  render('a');
+  render('a');
+  render('b');
+  assert.deepEqual(heard, [['a', 'success'], ['b', 'success']]);
+});

@@ -39,7 +39,10 @@
     "virtualWorkspaces": true
   },
   "contributes": {
-    "markdown.markdownItPlugins": true
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "media/preview.css"
+    ]
   },
   "scripts": {
     "lint": "tsc --noEmit",
