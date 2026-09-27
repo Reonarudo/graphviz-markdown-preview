@@ -42,3 +42,9 @@ SHA-256 `b8ece2437692dad44d851c4532723390a5a330990007706be9c8d2b90d294f36`.
 The generated JavaScript and linked runtime contain Emscripten code, available under
 the MIT and University of Illinois/NCSA licenses
 (`vendor/viz/licenses/EMSCRIPTEN-LICENSE`).
+
+## XML parser
+
+`@xmldom/xmldom` 0.9.12 is bundled into the extension to parse and rebuild Graphviz
+SVG (see `docs/adr/0001-allowlist-svg-sanitizer.md`). Its MIT license and attribution
+are in `licenses/XMLDOM-LICENSE`; the exact version is locked in `package-lock.json`.

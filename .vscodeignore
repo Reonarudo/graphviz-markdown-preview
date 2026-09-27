@@ -4,6 +4,7 @@
 !vendor/viz/provenance.json
 !vendor/viz/SHA256SUMS
 !vendor/viz/licenses/**
+!licenses/**
 !package.json
 !README.md
 !CHANGELOG.md

@@ -54,6 +54,7 @@
     "@types/node": "22.20.3",
     "@types/vscode": "1.95.0",
     "@vscode/vsce": "4.0.0",
+    "@xmldom/xmldom": "0.9.12",
     "esbuild": "0.28.2",
     "markdown-it": "15.0.2",
     "tsx": "4.23.13",
