@@ -27,27 +27,27 @@ digraph { rankdir=LR; source -> parse -> render }
 ````
 
 | Attribute | Effect |
-|---|---|
-| `alt` | Description for readers who cannot see the diagram (`role="img"` + `aria-label`) |
+| --- | --- |
+| `alt` | Description for readers who cannot see the diagram |
 | `caption` | Text shown beneath the diagram |
 | `align` | `left`, `center` or `right` |
 | `class` | Extra CSS class on the diagram's `<svg>` |
 
-Values are quoted. A mistyped or malformed attribute never costs you the diagram:
-it is ignored, and a note is written to the *Graphviz Diagram Preview* output
-channel.
+Values are quoted. A mistyped or malformed attribute never costs you the
+diagram: it is ignored, and a note is written to the *Graphviz Diagram Preview*
+output channel.
 
 ## Errors and limits
 
-A DOT syntax error is shown in place of the diagram, with the offending source line.
-Layout is limited to 3 seconds per diagram and 64 KB of source; a graph that takes
-longer shows a timeout message until its source changes. Graphviz warnings (unknown
-shapes, fonts without metrics) go to the output channel.
+A DOT syntax error is shown in place of the diagram, with the offending source
+line. Layout is limited to 3 seconds per diagram and 64 KB of source; a graph
+that takes longer shows a timeout message until its source changes. Graphviz
+warnings (unknown shapes, fonts without metrics) go to the output channel.
 
 Links (`URL`, `href`) work for `http:`, `https:` and `mailto:` and keep their
 tooltips; other links are removed but the node stays. Images (`image=`,
-`<IMG SRC>`) are not supported. The extension reads no files, so it works fully in
-Restricted Mode and virtual workspaces.
+`<IMG SRC>`) are not supported. The extension reads no files, so it works fully
+in Restricted Mode and virtual workspaces.
 
 ## Fonts
 
