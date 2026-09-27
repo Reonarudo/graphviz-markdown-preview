@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 — 2026-09-27
 
 - Render `graphviz` fences in the Markdown preview with Graphviz 16.0.0 (viz-js
   3.30.0), in a worker with a 3 s layout limit that recovers after a timeout.
