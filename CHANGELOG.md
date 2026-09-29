@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- README screenshots captured from a real VS Code by `npm run screenshots`, with
+  `examples/demo.md` as the document they show.
+
 ## 0.1.0 — 2026-09-27
 
 - Render `graphviz` fences in the Markdown preview with Graphviz 16.0.0 (viz-js

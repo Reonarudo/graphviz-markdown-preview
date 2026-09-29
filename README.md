@@ -16,6 +16,8 @@ digraph {
 Only `graphviz` fences are claimed — `dot` fences are left to other renderers.
 To use another layout engine, set it inside the source, e.g. `layout=neato`.
 
+![A dot pipeline and a neato graph rendered in VS Code's built-in Markdown preview](media/screenshots/diagrams.jpg)
+
 ## Fence attributes
 
 An optional attribute block after the tag adjusts how one diagram is presented:
@@ -36,6 +38,8 @@ digraph { rankdir=LR; source -> parse -> render }
 Values are quoted. A mistyped or malformed attribute never costs you the
 diagram: it is ignored, and a note is written to the *Graphviz Diagram Preview*
 output channel.
+
+![A captioned, centred diagram with a cluster and a gradient node, and a syntax error report quoting its line](media/screenshots/caption-and-error.jpg)
 
 ## Errors and limits
 
@@ -58,6 +62,19 @@ measured as Times, and a warning is written to the *Graphviz Diagram Preview*
 output channel. Name a single family — a CSS-style list such as
 `fontname="Helvetica,Arial,sans-serif"` or a generic family such as `sans-serif`
 is measured as Times.
+
+## Development
+
+Requires Node 22 or newer (see `.nvmrc`).
+
+```sh
+npm ci
+npm run lint            # tsc --noEmit
+npm test                # node --test, after building
+npm run package         # vsce package
+npm run test:package    # the VSIX inside a real VS Code
+npm run screenshots     # regenerate media/screenshots from examples/demo.md
+```
 
 ## License
 
