@@ -46,5 +46,5 @@ the MIT and University of Illinois/NCSA licenses
 ## XML parser
 
 `@xmldom/xmldom` 0.9.12 is bundled into the extension to parse and rebuild Graphviz
-SVG (see `docs/adr/0001-allowlist-svg-sanitizer.md`). Its MIT license and attribution
+SVG. Its MIT license and attribution
 are in `licenses/XMLDOM-LICENSE`; the exact version is locked in `package-lock.json`.
