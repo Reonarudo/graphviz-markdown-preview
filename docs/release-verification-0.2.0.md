@@ -1,0 +1,9 @@
+# Graphviz Diagram Preview 0.2.0 release verification
+
+- Renders through [graphviz-renderer](https://github.com/Reonarudo/graphviz-renderer) 1.0.0, pinned to its release tarball (`integrity` `sha512-86cbkRdPf7/t+ebMpHclU4dJ0nxIJsUzA77nLnJOATFTxTVSLgCxxedR+jp3yBQYViDMg8PRGQFvI2/k5urzUA==`). The library ships unbundled under the VSIX's `node_modules`, together with `@xmldom/xmldom`. `vendor/viz/` is gone. Requires VS Code 1.101.
+- Commit `629d3cc`. 26 unit tests, type checking, build and packaging pass. The packaged-VSIX host test passes on VS Code 1.143.0 and 1.101.0.
+- Cross-platform CI passed on Linux, Windows and macOS, plus the 1.101.0 minimum-version job: https://github.com/Reonarudo/graphviz-markdown-preview/actions/runs/40109249254
+- The host test is the guard for `.vscodeignore` trimming: with the library's `vendor/` removed from the unpacked VSIX, it fails.
+- GitHub Release [v0.2.0](https://github.com/Reonarudo/graphviz-markdown-preview/releases/tag/v0.2.0), built by `release.yml` from the tag: VSIX **860 766 bytes, 44 files**, SHA-256 `b329bd6da4f3dab6e7fda36be5cb2e49c63daef766fc5ce1aad412e08e1ca7e6`. `.vscodeignore` trims `*.d.ts` and `*.map` from `node_modules`.
+- That release asset, checked against its `SHA256SUMS`, passed `npm run test:package -- <asset>` on VS Code 1.143.0 and 1.101.0 and was published unchanged with `vsce publish --packagePath` on 2026-10-24.
+- Marketplace: listed with engine `^1.101.0`; 0.1.0 stays listed with `^1.95.0`. Installed by ID in an isolated environment, its files equal the release asset, except that VS Code adds `__metadata` to `package.json`. The host test run against that **installed** copy passes on VS Code 1.143.0 and 1.101.0: mixed fences, attributes and class escaping, links, a hostile fontname, gradients with deterministic ids, a syntax error with its line, and timeout recovery. VS Code 1.95.0 installing by ID gets 0.1.0.
