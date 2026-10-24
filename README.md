@@ -1,6 +1,9 @@
 # Graphviz Diagram Preview
 
-Adds Graphviz (DOT) support to VS Code's built-in Markdown preview.
+Adds Graphviz (DOT) support to VS Code's built-in Markdown preview. Diagrams are
+drawn by [graphviz-renderer](https://github.com/Reonarudo/graphviz-renderer), the
+same library that renders Graphviz on reonarudo.github.io. Requires VS Code 1.101
+or later; older versions stay on 0.1.0.
 
 Write DOT source in a fence tagged `graphviz`:
 
@@ -44,7 +47,7 @@ output channel.
 ## Errors and limits
 
 A DOT syntax error is shown in place of the diagram, with the offending source
-line. Layout is limited to 3 seconds per diagram and 64 KB of source; a graph
+line. Layout is limited to 3 seconds per diagram and 64 000 characters of source; a graph
 that takes longer shows a timeout message until its source changes. Graphviz
 warnings (unknown shapes, fonts without metrics) go to the output channel.
 
@@ -78,5 +81,5 @@ npm run screenshots     # regenerate media/screenshots from examples/demo.md
 
 ## License
 
-MIT for this extension; bundled Graphviz is EPL-2.0 — see
+MIT for this extension; Graphviz, shipped inside graphviz-renderer, is EPL-2.0 — see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

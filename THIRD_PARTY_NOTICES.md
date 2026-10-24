@@ -1,50 +1,27 @@
-# Third-party notices and binary provenance
+# Third-party notices
 
 The extension's original TypeScript, tests, build scripts, and artwork are MIT
 licensed (see `LICENSE`). This does not relicense bundled software.
 
-## Graphviz 16.0.0
+## Graphviz renderer
 
-`vendor/viz/viz.cjs` contains Graphviz 16.0.0 compiled to WebAssembly.
+Diagrams are rendered by
+[graphviz-renderer](https://github.com/Reonarudo/graphviz-renderer) (MIT), shipped
+in this extension under `node_modules/@reonarudo/graphviz-renderer/`. It carries
+**Graphviz 16.0.0**, the unmodified official release compiled to WebAssembly by
+viz-js 3.30.0. Its own `THIRD_PARTY_NOTICES.md` and `licenses/` directory give the
+engine's provenance and licenses; keep them with any redistribution:
 
-Graphviz is distributed under the **Eclipse Public License 2.0**; the full text is
-in `vendor/viz/licenses/GRAPHVIZ-EPL-2.0`. Copyright is held by AT&T and the
-Graphviz contributors — see <https://graphviz.org>.
+- Graphviz 16.0.0, under the Eclipse Public License 2.0
+  (`licenses/GRAPHVIZ-EPL-2.0`); copyright AT&T and the Graphviz contributors,
+  <https://graphviz.org>.
+- viz-js 3.30.0 by Michael Daines, MIT (`licenses/VIZ-JS-LICENSE`).
+- Expat 2.8.4, MIT (`licenses/EXPAT-COPYING`).
+- The Emscripten runtime, MIT / University of Illinois/NCSA
+  (`licenses/EMSCRIPTEN-LICENSE`).
 
-Source code: the unmodified official release tarball
-<https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/16.0.0/graphviz-16.0.0.tar.gz>,
-SHA-256 `36a1de1aaf5a2023b14f95170a5f8f0b12522d1c305b517fc261966597050749`.
-Upstream repository: <https://gitlab.com/graphviz/graphviz>.
+## xmldom
 
-## viz-js 3.30.0
-
-The WebAssembly build and its JavaScript wrapper come from the npm package
-[`@viz-js/viz`](https://www.npmjs.com/package/@viz-js/viz) 3.30.0 by Michael Daines,
-MIT licensed (`vendor/viz/licenses/VIZ-JS-LICENSE`; the npm package itself ships no
-license file). npm integrity
-`sha512-2zmcP55QY44uQfZ+GvgNHmGd8S6KUD+2eMur9AbYybSzrOd/m8nMUg0ZircJNiJRKGgVBKAE8kh0hAwpUFUFQQ==`.
-
-`vendor/viz/provenance.json` is the package's SLSA v1 build provenance: the backend
-was built from <https://github.com/mdaines/viz-js> revision
-`99da545270e6e7b127a5c7ba65974b8a604a6358` (`packages/viz/backend/Dockerfile`) with
-`emscripten/emsdk:5.0.7`, the Graphviz tarball above, and expat 2.8.4.
-`vendor/viz/SHA256SUMS` pins the vendored files; the test suite checks it.
-
-## Expat 2.8.4
-
-Graphviz is linked with the Expat XML parser, MIT licensed
-(`vendor/viz/licenses/EXPAT-COPYING`). Source:
-<https://github.com/libexpat/libexpat/releases/download/R_2_8_4/expat-2.8.4.tar.gz>,
-SHA-256 `b8ece2437692dad44d851c4532723390a5a330990007706be9c8d2b90d294f36`.
-
-## Emscripten
-
-The generated JavaScript and linked runtime contain Emscripten code, available under
-the MIT and University of Illinois/NCSA licenses
-(`vendor/viz/licenses/EMSCRIPTEN-LICENSE`).
-
-## XML parser
-
-`@xmldom/xmldom` 0.9.12 is bundled into the extension to parse and rebuild Graphviz
-SVG. Its MIT license and attribution
-are in `licenses/XMLDOM-LICENSE`; the exact version is locked in `package-lock.json`.
+[`@xmldom/xmldom`](https://github.com/xmldom/xmldom), used by the renderer's SVG
+sanitizer, is shipped under `node_modules/@xmldom/xmldom/` with its MIT license. The
+exact version is locked in `package-lock.json`.

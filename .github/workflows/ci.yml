@@ -41,7 +41,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - run: xvfb-run -a npm run test:extension
+      - run: npm run package
+      - run: xvfb-run -a npm run test:package
         env:
-          VSCODE_VERSION: 1.95.0
+          VSCODE_VERSION: 1.101.0

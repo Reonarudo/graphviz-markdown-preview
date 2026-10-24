@@ -1,12 +1,7 @@
 import type MarkdownItConstructor from 'markdown-it';
 type MarkdownIt = InstanceType<typeof MarkdownItConstructor>;
-import type { RenderResult } from './renderer';
+import type { RenderInput, RenderResult } from '@reonarudo/graphviz-renderer';
 import { parseAttributes, type FenceAttributes } from './attributes';
-import { namespaceSvg } from './sanitizer';
-import { randomBytes } from 'node:crypto';
-
-/** The class on every diagram's root `<svg>`, so the preview stylesheet can select it. */
-export const BASE_CLASS = 'graphviz';
 
 /**
  * `graphviz`, alone or followed by an attribute block. First word only, case-sensitive.
@@ -16,7 +11,7 @@ export const BASE_CLASS = 'graphviz';
  */
 const CLAIMED = /^graphviz(\s+\{|$)/;
 
-export type Render = (source: string) => RenderResult;
+export type Render = (input: RenderInput) => RenderResult;
 export type Report = (message: string) => void;
 
 /**
@@ -27,10 +22,6 @@ export type Report = (message: string) => void;
  */
 export function markdownPlugin(md: MarkdownIt, render: Render, report: Report = () => {}): MarkdownIt {
   const original = md.renderer.rules.fence;
-  // Graphviz reuses ids like `node1_l_0` in every diagram, and a cached diagram can appear twice,
-  // so every occurrence gets its own prefix.
-  const session = randomBytes(6).toString('hex');
-  let occurrence = 0;
   md.renderer.rules.fence = (tokens, index, options, env, self) => {
     const token = tokens[index]!;
     const info = token.info.trim();
@@ -43,18 +34,38 @@ export function markdownPlugin(md: MarkdownIt, render: Render, report: Report = 
     for (const diagnostic of diagnostics) {
       report(diagnostic);
     }
-    const result = render(token.content);
+    let result: RenderResult;
+    try {
+      result = render({ source: token.content });
+    } catch (error) {
+      // A throw inside a markdown-it rule would remove the whole extension from the preview.
+      result = { status: 'failure', message: error instanceof Error ? error.message : String(error) };
+    }
     if (result.status !== 'success') return errorReport(md, result, token.content);
-    const svg = namespaceSvg(result.output, `gv-${session}-${++occurrence}-`);
-    return wrap(md, withClass(md, svg, attributes.class), attributes);
+    return wrap(md, sized(withClass(md, result.output, attributes.class)), attributes);
   };
   return md;
 }
 
-/** Put our base class — and the author's, if any — on the root `<svg>` Graphviz left unclassed. */
+/** The library's root `<svg class="graphviz" viewBox="…">`, up to its closing `>`. */
+const ROOT = /^<svg\b[^>]*>/;
+
+/** Add the author's class, escaped, beside the `graphviz` class the library put on the root. */
 function withClass(md: MarkdownIt, svg: string, extra: string | undefined): string {
-  const classes = extra ? `${BASE_CLASS} ${extra}` : BASE_CLASS;
-  return svg.replace(/^<svg\b/, `<svg class="${md.utils.escapeHtml(classes)}"`);
+  if (!extra) return svg;
+  return svg.replace(ROOT, (tag) => tag.replace(/\bclass="graphviz"/, `class="graphviz ${md.utils.escapeHtml(extra)}"`));
+}
+
+/**
+ * Give the diagram its natural width, which the library leaves to the consumer: its SVG carries a
+ * `viewBox` only, in Graphviz's points. Without it a two-node graph would stretch to the column;
+ * the stylesheet still scales a wide one down.
+ */
+function sized(svg: string): string {
+  return svg.replace(ROOT, (tag) => {
+    const width = Number(/\bviewBox="[^"]*?([\d.]+)\s+[\d.]+"/.exec(tag)?.[1]);
+    return width > 0 ? tag.replace(/^<svg\b/, `<svg width="${width}pt"`) : tag;
+  });
 }
 
 function wrap(md: MarkdownIt, diagram: string, attributes: FenceAttributes): string {
@@ -84,18 +95,16 @@ function wrap(md: MarkdownIt, diagram: string, attributes: FenceAttributes): str
 function errorReport(md: MarkdownIt, result: Exclude<RenderResult, { status: 'success' }>, source: string): string {
   let text: string;
   if (result.status === 'timeout') {
-    text = 'Graphviz layout took longer than 3 s. Simplify or split the graph.';
+    text = `Graphviz layout took longer than ${result.budget / 1000} s. Simplify or split the graph.`;
   } else if (result.status === 'unavailable') {
     text = `Graphviz could not start: ${result.reason}. It will retry on the next render.`;
   } else {
-    const messages = result.errors
-      .filter((error) => error.level === 'error')
-      .map((error) => error.message.replace(/^(?:Error|Warning):\s*/, '').trim());
-    text = messages.join('\n');
-    // Echo the line Graphviz names, so the author need not count lines in the fence.
-    const line = Number(/\bin line (\d+)\b/.exec(text)?.[1]);
+    text = result.line === undefined
+      ? `Graphviz error: ${result.message}`
+      : `Graphviz error at line ${result.line}: ${result.message}`;
+    // Echo the line, so the author need not count lines in the fence.
     const lines = source.split('\n');
-    if (line >= 1 && line <= lines.length) text += `\n\n${line} │ ${lines[line - 1]}`;
+    if (result.line !== undefined && result.line <= lines.length) text += `\n\n${result.line} │ ${lines[result.line - 1]}`;
   }
   return `<div class="graphviz-error" role="alert"><pre>${md.utils.escapeHtml(text)}</pre></div>\n`;
 }

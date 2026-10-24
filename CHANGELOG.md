@@ -1,7 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-10-24
 
+- Diagrams are rendered by graphviz-renderer 1.0.0, the library reonarudo.github.io
+  uses, instead of a copy of Graphviz inside the extension. The engine is still
+  Graphviz 16.0.0 (viz-js 3.30.0). **Requires VS Code 1.101 or later.**
+- Error reports read `Graphviz error at line N: …` and still quote the line.
+- Diagram ids are derived from the source, so identical graphs get identical ids.
 - README screenshots captured from a real VS Code by `npm run screenshots`, with
   `examples/demo.md` as the document they show.
 

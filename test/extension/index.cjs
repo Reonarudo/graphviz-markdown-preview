@@ -21,15 +21,16 @@ exports.run = async () => {
     fence('pikchr', 'box "hi"'),
     fence('swift', 'let x = 42')
   ].join('\n'));
-  assert.equal((mixed.match(/<svg class="graphviz"/g) ?? []).length, 2);
+  // The library's SVG, given its natural width in points by the extension.
+  assert.equal((mixed.match(/<svg width="[\d.]+pt"[^>]*\bclass="graphviz"/g) ?? []).length, 2);
   assert.match(mixed, />parse<\/text>/);
   assert.match(mixed, /class="[^"]*\blanguage-dot"/);
   assert.match(mixed, /class="[^"]*\blanguage-pikchr"/);
   assert.match(mixed, /class="[^"]*\blanguage-swift"/);
 
   // Attributes, escaping and a tolerated typo.
-  const attributed = await render(fence('graphviz {alt="Two nodes" caption="Figure 1: <pipeline>" align="center" algin="x"}', 'digraph { a -> b }'));
-  assert.match(attributed, /<figure class="graphviz-figure graphviz-align-center"><div role="img" aria-label="Two nodes"><svg class="graphviz"/);
+  const attributed = await render(fence('graphviz {alt="Two nodes" caption="Figure 1: <pipeline>" align="center" algin="x" class="wide\\" onload=\\"x"}', 'digraph { a -> b }'));
+  assert.match(attributed, /<figure class="graphviz-figure graphviz-align-center"><div role="img" aria-label="Two nodes"><svg width="[\d.]+pt"[^>]*\bclass="graphviz wide&quot; onload=&quot;x"/);
   assert.match(attributed, /<figcaption>Figure 1: &lt;pipeline&gt;<\/figcaption>/);
 
   // Links: https survives with its tooltip, javascript: is unwrapped and the node stays.
@@ -42,15 +43,17 @@ exports.run = async () => {
   const hostile = await render(fence('graphviz', 'digraph { a [fontname="x\\"/><script>alert(1)</script><text x=\\""] }'));
   assert.doesNotMatch(hostile, /<script/);
 
-  // Gradients, and two copies of one diagram with distinct ids.
+  // Gradients, with the library's deterministic ids: the same source, the same ids.
   const twice = await render(fence('graphviz', 'digraph { a [style=filled fillcolor="red:blue"] }').repeat(2));
   assert.match(twice, /<stop offset="0" style="stop-color:red;/);
   const gradientIds = [...twice.matchAll(/<linearGradient id="([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(new Set(gradientIds).size, 2);
+  assert.equal(gradientIds.length, 2);
+  assert.match(gradientIds[0], /^graphviz-[0-9a-f]{8}-/);
+  assert.equal(gradientIds[0], gradientIds[1]);
 
   // A syntax error becomes an error report quoting the line; the rest of the document survives.
   const broken = await render('Before\n\n' + fence('graphviz', 'digraph {\n  x -> ;\n}') + '\nAfter');
-  assert.match(broken, /<div class="graphviz-error" role="alert"><pre>syntax error in line 2 near ';'/);
+  assert.match(broken, /<div class="graphviz-error" role="alert"><pre>Graphviz error at line 2: syntax error near ';'/);
   assert.match(broken, /2 │   x -&gt; ;/);
   assert.match(broken, /<p\b[^>]*>After<\/p>/);
 

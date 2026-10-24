@@ -1,10 +1,5 @@
 **
 !dist/**
-!vendor/viz/viz.cjs
-!vendor/viz/provenance.json
-!vendor/viz/SHA256SUMS
-!vendor/viz/licenses/**
-!licenses/**
 !package.json
 !README.md
 !CHANGELOG.md
@@ -13,3 +8,8 @@
 !media/icon.png
 !media/preview.css
 !media/screenshots/*.jpg
+# The renderer library and its dependencies, installed by vsce from the production tree
+# (ADR 0010). Only files provably unused at runtime are left out (type declarations, source
+# maps); the packaged-VSIX host test is the guard. vsce lets any negation win over any
+# ignore, so the trim is written into the negation itself.
+!node_modules/**/!(*.d.ts|*.map)
