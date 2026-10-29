@@ -2,9 +2,17 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import MarkdownIt from 'markdown-it';
 import { markdownPlugin } from '../src/markdown';
+import { rendering } from './helpers';
 import type { RenderResult } from '@reonarudo/graphviz-renderer';
 
 const diagram = (output = '<svg class="graphviz"></svg>'): RenderResult => ({ status: 'success', output, notes: [] });
+
+const ICON_CODE = '<svg class="graphviz-icon-code" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">' +
+  '<path d="M5.7 3.3 1 8l4.7 4.7.9-.9L2.8 8l3.8-3.8zM10.3 3.3l-.9.9L13.2 8l-3.8 3.8.9.9L15 8z"/></svg>';
+const ICON_GRAPH = '<svg class="graphviz-icon-graph" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">' +
+  '<rect x="1.5" y="1.5" width="5" height="3.5" rx=".5"/><rect x="9.5" y="1.5" width="5" height="3.5" rx=".5"/><rect x="5.5" y="11" width="5" height="3.5" rx=".5"/>' +
+  '<path d="M4 5v3h8V5M8 8v3"/></svg>';
+const TOGGLE = `<button type="button" class="graphviz-toggle" aria-pressed="false" aria-label="Source view" title="Source view">${ICON_CODE}${ICON_GRAPH}</button>`;
 
 test('claims exactly graphviz fences and passes the DOT source through', () => {
   let seen = '';
@@ -22,12 +30,70 @@ test('preserves unrelated fences byte for byte including highlighting', () => {
   }
 });
 
-test('a previously registered fence renderer still receives its fences', () => {
+test('a previously registered fence renderer still receives its fences, and supplies the source view of ours', () => {
   const md = new MarkdownIt();
   md.renderer.rules.fence = () => '<div class="other-extension"></div>';
   markdownPlugin(md, () => diagram());
   assert.equal(md.render('```dot\ndigraph {}\n```'), '<div class="other-extension"></div>');
-  assert.match(md.render('```graphviz\ndigraph {}\n```'), /<svg/);
+  const html = md.render('```graphviz\ndigraph {}\n```');
+  assert.match(html, /<svg/);
+  assert.match(html, /<\/div><div class="other-extension"><\/div><\/div>\n$/);
+});
+
+// The DOM contract (docs/source-toggle-spec.md in onnx-markdown-preview, section 2): asserted
+// exactly once, here.
+test('every claimed fence is wrapped: toggle first, rendering slot, then the delegated source <pre>', () => {
+  const md = markdownPlugin(new MarkdownIt(), () => diagram());
+  assert.equal(md.render('```graphviz\nm\n```'),
+    `<div class="graphviz-fence code-line" data-line="0" data-fence-key="bd2eb076">${TOGGLE}` +
+    '<div class="graphviz-rendering"><svg class="graphviz"></svg></div>' +
+    '<pre><code class="language-graphviz">m\n</code></pre>\n</div>\n');
+});
+
+test('the wrapper carries code-line and data-line from the token map, and neither without a map', () => {
+  const md = markdownPlugin(new MarkdownIt(), () => diagram());
+  const tokens = md.parse('# Title\n\n```graphviz\nm\n```', {});
+  assert.match(md.renderer.render(tokens, md.options, {}), /<div class="graphviz-fence code-line" data-line="2" data-fence-key="bd2eb076">/);
+  for (const token of tokens) token.map = null;
+  const bare = md.renderer.render(tokens, md.options, {});
+  assert.match(bare, /<div class="graphviz-fence" data-fence-key="bd2eb076">/);
+  assert.doesNotMatch(bare, /data-line/);
+});
+
+test('the fence key is FNV-1a of the exact body', () => {
+  const md = markdownPlugin(new MarkdownIt(), () => diagram());
+  assert.match(md.render('```graphviz\nm\n```'), /data-fence-key="bd2eb076"/);
+  assert.match(md.render('```graphviz\n```'), /data-fence-key="811c9dc5"/);
+  // The info string and attributes play no part: same body, same key.
+  assert.match(md.render('```graphviz {caption="c"}\nm\n```'), /data-fence-key="bd2eb076"/);
+  assert.match(md.render('```graphviz\nm \n```'), /data-fence-key="(?!bd2eb076)[0-9a-f]{8}"/);
+});
+
+test('the source <pre> is the delegated fence rule output, with VS Code-style highlighting kept verbatim', () => {
+  const highlighted = markdownPlugin(new MarkdownIt({ highlight: (code, lang) => `<i class="${lang}">${code.trim()}</i>` }), () => diagram());
+  assert.match(highlighted.render('```graphviz {alt="x"}\nm\n```'), /<\/div><pre><code class="language-graphviz"><i class="graphviz">m<\/i><\/code><\/pre>\n<\/div>\n$/);
+  // VS Code's shell keeps its highlighting and `dir`, but not the scroll-sync class and line,
+  // which the wrapper carries for the whole fence.
+  const vscode = new MarkdownIt();
+  vscode.renderer.rules.fence = (tokens, index) =>
+    `<pre><code data-line="${tokens[index]!.map![0]}" class="code-line language-graphviz" dir="auto">${tokens[index]!.content}</code></pre>\n`;
+  markdownPlugin(vscode, () => diagram());
+  assert.match(vscode.render('```graphviz\nm\n```'), /<\/div><pre><code class="language-graphviz" dir="auto">m\n<\/code><\/pre>\n<\/div>\n$/);
+  // Bare markdown-it with no fence rule at all: a hand-built, escaped fallback.
+  const md = new MarkdownIt();
+  delete md.renderer.rules.fence;
+  markdownPlugin(md, () => diagram());
+  assert.match(md.render('```graphviz\n<m>\n```'), /<\/div><pre><code class="language-graphviz">&lt;m&gt;\n<\/code><\/pre>\n<\/div>\n$/);
+});
+
+test('the error card and a renderer that threw sit in the rendering slot, with the source <pre> beside them', () => {
+  const failed = markdownPlugin(new MarkdownIt(), () => ({ status: 'failure', message: 'no' }));
+  assert.equal(failed.render('```graphviz\nm\n```'),
+    `<div class="graphviz-fence code-line" data-line="0" data-fence-key="bd2eb076">${TOGGLE}` +
+    '<div class="graphviz-rendering"><div class="graphviz-error" role="alert"><pre>Graphviz error: no</pre></div>\n</div>' +
+    '<pre><code class="language-graphviz">m\n</code></pre>\n</div>\n');
+  const threw = markdownPlugin(new MarkdownIt(), () => { throw new Error('x'); });
+  assert.match(threw.render('```graphviz\nm\n```'), /<div class="graphviz-rendering"><div class="graphviz-error" role="alert"><pre>Graphviz error: x<\/pre><\/div>\n<\/div><pre><code class="language-graphviz">m\n<\/code><\/pre>\n<\/div>\n$/);
 });
 
 test('missing fence renderer falls back without throwing', () => {
@@ -38,15 +104,15 @@ test('missing fence renderer falls back without throwing', () => {
   assert.equal(md.render('```swift\n42\n```'), expected);
 });
 
-test('a bare fence emits the diagram at its natural width in points, with no wrapper', () => {
+test('a bare fence emits the diagram at its natural width in points, with no figure', () => {
   const md = markdownPlugin(new MarkdownIt(), () => diagram('<svg class="graphviz" viewBox="0.00 0.00 62.00 116.00"><g/></svg>'));
-  assert.match(md.render('```graphviz\ndigraph {}\n```'),
-    /^<svg width="62pt" class="graphviz" viewBox="0.00 0.00 62.00 116.00"><g\/><\/svg>\n?$/);
+  assert.equal(rendering(md.render('```graphviz\ndigraph {}\n```')),
+    '<svg width="62pt" class="graphviz" viewBox="0.00 0.00 62.00 116.00"><g/></svg>');
 });
 
 test('a diagram without a viewBox gets no width', () => {
   const md = markdownPlugin(new MarkdownIt(), () => diagram('<svg class="graphviz"><g viewBox="0 0 9 9"/></svg>'));
-  assert.match(md.render('```graphviz\ndigraph {}\n```'), /^<svg class="graphviz"><g/);
+  assert.equal(rendering(md.render('```graphviz\ndigraph {}\n```')), '<svg class="graphviz"><g viewBox="0 0 9 9"/></svg>');
 });
 
 test('alt becomes an accessible name, caption a figure, align a class', () => {
@@ -68,7 +134,7 @@ test('align alone still produces a figure to carry the class', () => {
 test('class lands on the root svg beside the base class, escaped', () => {
   const md = markdownPlugin(new MarkdownIt(), () => diagram('<svg class="graphviz"><g class="graphviz"></g></svg>'));
   const html = md.render('```graphviz {class="wide &quot;x\\" onload=\\"y"}\ndigraph {}\n```');
-  assert.match(html, /^<svg class="graphviz wide &amp;quot;x&quot; onload=&quot;y"><g class="graphviz"><\/g><\/svg>/);
+  assert.equal(rendering(html), '<svg class="graphviz wide &amp;quot;x&quot; onload=&quot;y"><g class="graphviz"></g></svg>');
 });
 
 test('attribute text is escaped, including quotes, markup and Markdown', () => {
@@ -83,7 +149,7 @@ test('malformed attributes are reported, never shown, and the diagram still rend
   const reported: string[] = [];
   const md = markdownPlugin(new MarkdownIt(), () => diagram(), (m) => reported.push(m));
   const html = md.render('```graphviz {alt="unterminated}\ndigraph {}\n```');
-  assert.match(html, /^<svg class="graphviz"><\/svg>/);
+  assert.equal(rendering(html), '<svg class="graphviz"></svg>');
   assert.equal(reported.length, 1);
 });
 

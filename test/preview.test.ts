@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import MarkdownIt from 'markdown-it';
 import { createRuntime, type RenderResult } from '@reonarudo/graphviz-renderer';
 import { createPreview, createRenderer } from '../src/preview';
+import { rendering } from './helpers';
 
 const document = [
   '```graphviz {caption="Pipeline" class="wide"}',
@@ -33,7 +34,10 @@ test('a Markdown document renders library diagrams beside delegated fences, thro
     assert.equal((html.match(/<svg width="[\d.]+pt"[^>]*\bclass="graphviz/g) ?? []).length, 2);
     assert.match(html, /<figure class="graphviz-figure"><svg width="[\d.]+pt"[^>]*\bclass="graphviz wide"/);
     assert.match(html, /<figcaption>Pipeline<\/figcaption>/);
-    assert.doesNotMatch(html, /javascript/);
+    // The sanitised diagram carries no javascript: link; the fence's source view beside it quotes
+    // the body as escaped text, which is where the word still appears.
+    assert.doesNotMatch(rendering(html), /javascript/);
+    assert.match(html, /<pre><code class="language-graphviz">digraph \{ a \[style=filled fillcolor=&quot;red:blue&quot; URL=&quot;javascript:alert\(1\)&quot;\] a -&gt; b \}/);
     // Ids are the library's: deterministic, from the source's digest.
     assert.match(html, /<linearGradient id="graphviz-[0-9a-f]{8}-/);
     assert.match(html, /<pre><code class="language-dot">digraph \{ left -&gt; alone \}/);

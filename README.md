@@ -44,6 +44,15 @@ output channel.
 
 ![A captioned, centred diagram with a cluster and a gradient node, and a syntax error report quoting its line](media/screenshots/caption-and-error.jpg)
 
+## Viewing the source
+
+Every diagram carries a small button in its top corner that flips the fence
+between the diagram and the fence's text, highlighted the way the preview shows
+any other code block. A flipped fence stays flipped while you edit the
+document, after *Markdown: Refresh Preview*, and when the preview is reopened;
+flip it back to see the diagram again. The button is a reader's control: a fence
+cannot be written to open in source view.
+
 ## Errors and limits
 
 A DOT syntax error is shown in place of the diagram, with the offending source
@@ -76,6 +85,7 @@ npm run lint            # tsc --noEmit
 npm test                # node --test, after building
 npm run package         # vsce package
 npm run test:package    # the VSIX inside a real VS Code
+npm run test:preview    # the view toggle in a live preview, through Playwright
 npm run screenshots     # regenerate media/screenshots from examples/demo.md
 ```
 

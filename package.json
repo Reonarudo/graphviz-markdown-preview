@@ -1,6 +1,6 @@
 {
   "name": "graphviz-diagram-preview",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "Graphviz Diagram Preview",
   "description": "Adds Graphviz (DOT) support to VS Code's built-in Markdown preview",
   "keywords": [
@@ -42,6 +42,9 @@
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [
       "media/preview.css"
+    ],
+    "markdown.previewScripts": [
+      "media/preview.js"
     ]
   },
   "scripts": {
@@ -52,6 +55,8 @@
     "vscode:prepublish": "npm run build",
     "package": "vsce package",
     "test:extension": "node scripts/test-extension.mjs",
+    "pretest:preview": "npm run build",
+    "test:preview": "node scripts/test-preview.mjs",
     "test:package": "node scripts/test-package.mjs",
     "screenshots": "node scripts/screenshots.mjs"
   },

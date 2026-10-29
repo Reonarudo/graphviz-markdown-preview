@@ -1,6 +1,3 @@
-# Graphviz Diagram Preview v0.2.0
+# Graphviz Diagram Preview v0.3.0
 
-Diagrams are now rendered by [graphviz-renderer](https://github.com/Reonarudo/graphviz-renderer) 1.0.0, the same library that renders Graphviz on reonarudo.github.io, instead of a copy inside the extension. The engine is still the unmodified Graphviz 16.0.0 compiled to WebAssembly. **Requires VS Code 1.101 or later**; older versions stay on 0.1.0.
-
-- Error reports read `Graphviz error at line N: …` and quote the offending line.
-- Diagram ids are derived from the source.
+Every diagram now carries a view toggle in its top corner that flips the fence between the diagram and its source text, highlighted the way the preview highlights any code block. A flipped fence stays flipped while you edit the document, after *Markdown: Refresh Preview* and when the preview is reopened. The toggle is also present on error cards, and it is a reader's control: no fence attribute presets it.
